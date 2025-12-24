@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #4F46E5;
+  --secondary: #22C55E;
+  --accent: #F59E0B;
+  --neutral-900: #1F2937;
+  --neutral-700: #374151;
+  --neutral-500: #6B7280;
+  --neutral-300: #D1D5DB;
+  --neutral-100: #F3F4F6;
+  --surface-hero: #FFFFFF;
+  --surface-panel: #F9FAFB;
+  --background: #FFFFFF;
+  --foreground: #111827;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-500 text-white font-bold rounded-lg hover:shadow-lg transition flex items-center gap-2;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.backdrop-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
