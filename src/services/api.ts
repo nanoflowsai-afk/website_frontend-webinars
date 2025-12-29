@@ -36,7 +36,12 @@ export const userApi = {
         });
     },
     deleteAccount: () => api.delete('/user'),
-    registerWebinar: (webinarId: number) => api.post(`/user/registrations/${webinarId}`)
+    registerWebinar: (webinarId: number) => api.post(`/user/registrations/${webinarId}`),
+    getNotifications: () => api.get('/user/notifications'),
+    markNotificationRead: (id: number) => api.put(`/user/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.put('/user/notifications/read-all'),
+    createPaymentOrder: (webinarId: number, userId: number) => api.post('/payments/create-order', { webinarId, userId }),
+    verifyPayment: (data: any) => api.post('/payments/verify', data)
 };
 
 export default api;

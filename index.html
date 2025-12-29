@@ -1,13 +1,35 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nanoflows Webinars</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webinar Portal</title>
+  <meta http-equiv="Permissions-Policy"
+    content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    // Suppress known third-party warnings
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    const filter = (args) => {
+      const msg = args[0]?.toString() || "";
+      return msg.includes("x-rtb-fingerprint-id") || msg.includes("accelerometer");
+    };
+
+    console.warn = function (...args) {
+      if (!filter(args)) originalWarn.apply(console, args);
+    };
+    console.error = function (...args) {
+      if (!filter(args)) originalError.apply(console, args);
+    };
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

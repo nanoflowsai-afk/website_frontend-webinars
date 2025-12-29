@@ -16,6 +16,8 @@ interface WebinarCardProps {
         imageUrl: string;
         registeredCount?: number;
         maxCapacity?: number;
+        price?: number;
+        currency?: string;
     };
     isAuthenticated: boolean;
     onRegisterClick?: () => void;
@@ -61,9 +63,15 @@ const WebinarCard = ({ webinar, onRegisterClick }: WebinarCardProps) => {
                     alt={webinar.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                 />
-                <div className="absolute top-2 left-2">
+                <div className="absolute top-2 left-2 flex gap-2">
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeColor(webinar.type)} shadow-lg`}>
                         {getTypeIcon(webinar.type)} {webinar.type}
+                    </span>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold shadow-lg ${webinar.price && webinar.price > 0
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-green-100 text-green-700'
+                        }`}>
+                        {webinar.price && webinar.price > 0 ? `₹${webinar.price}` : 'Free'}
                     </span>
                 </div>
             </div>

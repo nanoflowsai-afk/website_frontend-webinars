@@ -3,16 +3,27 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { CheckCircle, Clock, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { WebinarRegistrationModal } from '../components/WebinarRegistrationModal';
+import { userApi } from '../services/api';
 
 const WebinarDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
     const [webinar, setWebinar] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+    const [userRegistrations, setUserRegistrations] = useState<any[]>([]);
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    // Status Popup State
+    const [statusPopup, setStatusPopup] = useState<{
+        open: boolean;
+        title: string;
+        message: string;
+        type: 'success' | 'pending' | 'info';
+    }>({ open: false, title: '', message: '', type: 'info' });
 
     useEffect(() => {
         const fetchWebinar = async () => {
@@ -43,14 +54,55 @@ const WebinarDetailsPage = () => {
                 setLoading(false);
             }
         };
+
+        const fetchUserRegistrations = async () => {
+            if (user) {
+                try {
+                    const res = await userApi.getRegistrations();
+                    setUserRegistrations(res.data.registrations || []);
+                } catch (err) {
+                    console.error("Failed to fetch user registrations", err);
+                }
+            }
+        };
+
         if (id) fetchWebinar();
-    }, [id]);
+        fetchUserRegistrations();
+    }, [id, user]);
 
     const handleRegister = () => {
         if (!user) {
             navigate('/login');
             return;
         }
+
+        const existingReg = userRegistrations.find(r => r.webinarId === webinar.id || r.id === webinar.id);
+        if (existingReg) {
+            if (existingReg.status === 'accepted') {
+                setStatusPopup({
+                    open: true,
+                    title: "Already Registered",
+                    message: "You are already confirmed for this webinar! We look forward to seeing you there.",
+                    type: 'success'
+                });
+            } else if (existingReg.status === 'pending') {
+                setStatusPopup({
+                    open: true,
+                    title: "Registration Pending",
+                    message: "Your registration has been submitted and is currently pending admin approval. You will be notified once approved.",
+                    type: 'pending'
+                });
+            } else {
+                setStatusPopup({
+                    open: true,
+                    title: "Registration Status",
+                    message: `You have already registered. Current status: ${existingReg.status}`,
+                    type: 'info'
+                });
+            }
+            return;
+        }
+
         setShowRegistrationModal(true);
     };
 
@@ -154,31 +206,32 @@ const WebinarDetailsPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {(webinar.roadmapItems || []).map((item: any, idx: number) => {
-                            let colors = {
-                                header: "from-orange-500 to-amber-500",
-                                subtitle: "text-orange-100",
-                                body: "from-orange-50 to-white",
-                                highlightText: "text-orange-700",
-                                highlightBg: "bg-orange-100",
-                            };
-
-                            if (item.day === 2) {
-                                colors = {
+                            // Define color themes
+                            const themes = [
+                                { // Theme 1 (Orange) - Day 1, 4, 7...
+                                    header: "from-orange-500 to-amber-500",
+                                    subtitle: "text-orange-100",
+                                    body: "from-orange-50 to-white",
+                                    highlightText: "text-orange-700",
+                                    highlightBg: "bg-orange-100",
+                                },
+                                { // Theme 2 (Blue) - Day 2, 5, 8...
                                     header: "from-blue-600 to-blue-400",
                                     subtitle: "text-blue-100",
                                     body: "from-blue-50 to-white",
                                     highlightText: "text-blue-700",
                                     highlightBg: "bg-blue-100",
-                                };
-                            } else if (item.day === 3) {
-                                colors = {
+                                },
+                                { // Theme 3 (Red) - Day 3, 6, 9...
                                     header: "from-red-600 to-red-500",
                                     subtitle: "text-red-100",
                                     body: "from-red-50 to-white",
                                     highlightText: "text-red-700",
                                     highlightBg: "bg-red-100",
-                                };
-                            }
+                                }
+                            ];
+
+                            const colors = themes[idx % themes.length];
 
                             return (
                                 <motion.div
@@ -192,6 +245,7 @@ const WebinarDetailsPage = () => {
                                         <div className="text-3xl font-black mb-2">Day {item.day}</div>
                                         <h3 className="text-sm font-black text-white/90">{item.title}</h3>
                                     </div>
+                                    {item.imageUrl && <img src={item.imageUrl} alt={item.title} className="w-full h-48 object-cover" />}
                                     <div className={`p-5 space-y-3 bg-gradient-to-b ${colors.body} flex-1`}>
                                         <p className={`text-xs ${colors.highlightText} font-bold text-center mb-4 ${colors.highlightBg} rounded-lg py-2`}>{item.highlight}</p>
                                         {(item.description || []).map((desc: string, i: number) => (
@@ -207,11 +261,105 @@ const WebinarDetailsPage = () => {
                 </div>
             </section>
 
+            {/* Meet Your Mentor Section */}
+            <section className="px-6 py-10 bg-white">
+                <div className="mx-auto max-w-[1000px]">
+                    <h2 className="text-3xl font-black text-gray-900 mb-12 text-center">
+                        Meet Your <span className="text-orange-600">Mentor</span>
+                    </h2>
+
+                    <div className="bg-white border-2 border-orange-100 rounded-2xl p-6 md:p-10 shadow-lg flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+                        {/* Mentor Image */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.6 }}
+                            className="flex-shrink-0"
+                        >
+                            <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-orange-100 p-2 relative">
+                                <div className="absolute inset-0 border-2 border-orange-500 rounded-full border-dashed animate-spin-slow"></div>
+                                <img
+                                    src={webinar.mentorImage || webinar.speakerImage || "https://via.placeholder.com/150"}
+                                    alt={webinar.mentorName}
+                                    className="w-full h-full object-cover rounded-full shadow-md"
+                                />
+                            </div>
+                        </motion.div>
+
+                        {/* Mentor Content */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="flex-1 text-center md:text-left"
+                        >
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">{webinar.mentorName || webinar.speaker}</h3>
+                            <div className="mb-6">
+                                <p className="text-xs text-gray-700 mb-1">{webinar.mentorRole || "Host"} - <span className="text-orange-600 font-bold">{webinar.mentorName || webinar.speaker}</span></p>
+                            </div>
+
+                            <div className="text-xs text-gray-700 space-y-4 whitespace-pre-wrap">
+                                {webinar.mentorBio || "Bio not available."}
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Status Popup */}
+            <AnimatePresence>
+                {statusPopup.open && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setStatusPopup(prev => ({ ...prev, open: false }))}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center"
+                        >
+                            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${statusPopup.type === 'success' ? 'bg-green-100' :
+                                statusPopup.type === 'pending' ? 'bg-orange-100' : 'bg-blue-100'
+                                }`}>
+                                {statusPopup.type === 'success' && <CheckCircle className="h-8 w-8 text-green-600" />}
+                                {statusPopup.type === 'pending' && <Clock className="h-8 w-8 text-orange-600" />}
+                                {statusPopup.type === 'info' && <Info className="h-8 w-8 text-blue-600" />}
+                            </div>
+
+                            <h3 className="mb-2 text-xl font-bold text-gray-900">{statusPopup.title}</h3>
+                            <p className="mb-6 text-gray-500">{statusPopup.message}</p>
+
+                            <button
+                                onClick={() => setStatusPopup(prev => ({ ...prev, open: false }))}
+                                className="w-full rounded-xl bg-gray-900 py-3 font-semibold text-white transition hover:bg-gray-800"
+                            >
+                                Close
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <WebinarRegistrationModal
                 isOpen={showRegistrationModal}
-                onClose={() => setShowRegistrationModal(false)}
-                webinarTitle={webinar.title}
-                webinarId={webinar.id}
+                onClose={() => {
+                    setShowRegistrationModal(false);
+                    // Refresh registrations after modal close
+                    const fetchUserRegistrations = async () => {
+                        if (user) {
+                            const res = await userApi.getRegistrations();
+                            setUserRegistrations(res.data.registrations || []);
+                        }
+                    };
+                    fetchUserRegistrations();
+                }}
+                webinarTitle={webinar?.title}
+                webinarId={webinar?.id}
             />
         </main>
     );

@@ -38,7 +38,9 @@ const MyRegistrationsPage = () => {
         setLoading(true);
         try {
             const res = await userApi.getRegistrations();
-            setRegistrations(res.data.registrations);
+            // Filter to show only accepted registrations
+            const accepted = res.data.registrations.filter((r: any) => r.status === 'accepted');
+            setRegistrations(accepted);
         } catch (err) {
             console.error("Failed to fetch registrations", err);
             setError("Failed to load registrations.");

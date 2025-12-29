@@ -32,7 +32,7 @@ const RegisterForm = () => {
                 navigate('/login');
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to register. Please try again.');
+            setError(err.response?.data?.error || err.response?.data?.message || 'Failed to register. Please try again.');
         } finally {
             setLoading(false);
         }

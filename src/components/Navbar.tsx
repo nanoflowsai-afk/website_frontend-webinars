@@ -1,11 +1,58 @@
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Bell } from "lucide-react";
+import { userApi } from "../services/api";
 
 export function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const { user, logout } = useAuth();
+
+    // Notification State
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const notificationRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (user) {
+            fetchNotifications();
+            // Optional: Poll every 30s
+            const interval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+
+    // Close notification dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+                setShowNotifications(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await userApi.getNotifications();
+            setNotifications(res.data.notifications);
+            setUnreadCount(res.data.notifications.filter((n: any) => !n.isRead).length);
+        } catch (error) {
+            console.error("Failed to fetch notifications", error);
+        }
+    };
+
+    const handleMarkRead = async (id: number) => {
+        try {
+            await userApi.markNotificationRead(id);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error("Failed to mark read", error);
+        }
+    };
 
     return (
         <header className="sticky top-0 z-50 border-b border-orange-100 bg-white/90 backdrop-blur-xl">
@@ -42,6 +89,65 @@ export function Navbar() {
                     <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
                         {user ? (
                             <div className="flex items-center gap-4">
+                                {/* Notification Bell */}
+                                <div className="relative" ref={notificationRef}>
+                                    <button
+                                        onClick={() => {
+                                            if (!showNotifications) {
+                                                // If opening, mark all as read locally and on server
+                                                setUnreadCount(0);
+                                                userApi.markAllNotificationsRead().catch(console.error);
+                                            }
+                                            setShowNotifications(!showNotifications);
+                                        }}
+                                        className="relative p-2 text-gray-500 hover:text-orange-500 transition rounded-full hover:bg-orange-50"
+                                    >
+                                        <Bell size={20} />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    {/* Notification Dropdown */}
+                                    {showNotifications && (
+                                        <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-gray-100 z-50">
+                                            <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-4 py-3">
+                                                <h3 className="font-semibold text-gray-900">Notifications</h3>
+                                                <span className="text-xs text-gray-500">{unreadCount} unread</span>
+                                            </div>
+                                            <div className="max-h-[320px] overflow-y-auto">
+                                                {notifications.length === 0 ? (
+                                                    <div className="p-8 text-center text-gray-500 text-sm">
+                                                        No notifications yet.
+                                                    </div>
+                                                ) : (
+                                                    notifications.map((n) => (
+                                                        <div
+                                                            key={n.id}
+                                                            onClick={!n.isRead ? () => handleMarkRead(n.id) : undefined}
+                                                            className={`relative border-b border-gray-50 p-4 transition hover:bg-gray-50 ${!n.isRead ? 'bg-orange-50/30' : ''}`}
+                                                        >
+                                                            <div className="flex items-start gap-3">
+                                                                <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.isRead ? 'bg-orange-500' : 'bg-transparent'}`} />
+                                                                <div className="flex-1">
+                                                                    <p className={`text-sm ${!n.isRead ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                                                                        {n.message}
+                                                                    </p>
+                                                                    <p className="mt-1 text-[10px] text-gray-400">
+                                                                        {new Date(n.createdAt).toLocaleDateString()}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <Link to="/profile" className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-orange-500 group">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-xs">
                                         {user.name?.charAt(0) || 'U'}
