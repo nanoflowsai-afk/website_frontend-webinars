@@ -79,6 +79,31 @@ export function WebinarRegistrationModal({
                             webinarId: webinarId,
                             userId: user?.id
                         });
+
+                        // Trigger Webhook
+                        try {
+                            await fetch("https://qwertdfdf.app.n8n.cloud/webhook-test/form-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    name: formData.name,
+                                    email: formData.email,
+                                    phone: formData.phone,
+                                    webinarTitle,
+                                    webinarId,
+                                    price,
+                                    currency,
+                                    paymentId: response.razorpay_payment_id,
+                                    orderId: response.razorpay_order_id
+                                }),
+                            });
+                        } catch (webhookError) {
+                            console.error("Webhook trigger failed", webhookError);
+                            // Don't block success UI if webhook fails
+                        }
+
                         setSuccess(true);
                     } catch (err) {
                         console.error("Payment verification failed", err);
