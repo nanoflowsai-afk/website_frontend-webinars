@@ -162,7 +162,7 @@ function LoginForm() {
                             </Link>
                         </p>
                         <a
-                            href={import.meta.env.VITE_MAIN_WEBSITE_URL || 'http://localhost:5000'}
+                            href="https://website-frontend-sigma-bice.vercel.app/"
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-white/10 hover:shadow-xl"
                         >
                             ← Back to website
