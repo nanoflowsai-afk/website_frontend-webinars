@@ -38,7 +38,9 @@ function App() {
               <MyRegistrationsPage />
             </ProtectedRoute>
           } />
+          <Route path="*" element={<Navigate to="/webinars" replace />} />
         </Route>
+        <Route path="*" element={<Navigate to="/webinars" replace />} />
       </Routes>
     </Router>
   );
