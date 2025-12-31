@@ -82,7 +82,7 @@ export function WebinarRegistrationModal({
 
                         // Trigger Webhook
                         try {
-                            await fetch("https://qwertdfdf.app.n8n.cloud/webhook-test/form-submission", {
+                            await fetch("https://n8n.srv1058786.hstgr.cloud/webhook/form-submission", {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
