@@ -18,6 +18,9 @@ interface Webinar {
     status?: string | 'Upcoming' | 'Completed';
     registrationId?: number;
     registeredAt?: string;
+    meetingId?: string;
+    passcode?: string;
+    inviteLink?: string;
 }
 
 const MyRegistrationsPage = () => {
@@ -25,6 +28,8 @@ const MyRegistrationsPage = () => {
     const [registrations, setRegistrations] = useState<Webinar[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
+    const [showJoinModal, setShowJoinModal] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -123,13 +128,84 @@ const MyRegistrationsPage = () => {
                                                 View Page
                                             </button>
                                         </Link>
-                                        <button className="flex-1 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-600">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedWebinar(webinar);
+                                                setShowJoinModal(true);
+                                            }}
+                                            className="flex-1 rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-600"
+                                        >
                                             Join Room
                                         </button>
                                     </div>
                                 </div>
                             </motion.div>
                         ))}
+                    </div>
+                )}
+
+
+                {/* Join Room Modal */}
+                {showJoinModal && selectedWebinar && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full relative p-6 text-center"
+                        >
+                            <button
+                                onClick={() => setShowJoinModal(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-3xl">🎥</span>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Join Webinar Room</h3>
+                            <p className="text-sm text-gray-500 mb-6">Use the details below to join the session.</p>
+
+                            <div className="space-y-4 mb-6 text-left">
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">Meeting ID</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-mono text-lg font-bold text-gray-900">{selectedWebinar.meetingId || "Not Available"}</p>
+                                        <button onClick={() => navigator.clipboard.writeText(selectedWebinar.meetingId || "")} className="text-blue-600 hover:text-blue-700 text-xs font-bold">Copy</button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <p className="text-xs text-gray-500 uppercase font-bold mb-1">Passcode</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-mono text-lg font-bold text-gray-900">{selectedWebinar.passcode || "Not Required"}</p>
+                                        <button onClick={() => navigator.clipboard.writeText(selectedWebinar.passcode || "")} className="text-blue-600 hover:text-blue-700 text-xs font-bold">Copy</button>
+                                    </div>
+                                </div>
+
+                                {selectedWebinar.inviteLink && (
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                        <p className="text-xs text-blue-800 uppercase font-bold mb-1">Direct Invite Link</p>
+                                        <div className="flex flex-col gap-2">
+                                            <p className="font-mono text-xs text-blue-900 break-all line-clamp-2">{selectedWebinar.inviteLink}</p>
+                                            <div className="flex gap-2">
+                                                <a href={selectedWebinar.inviteLink} target="_blank" rel="noopener noreferrer" className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition text-center uppercase tracking-wider">Join Now</a>
+                                                <button onClick={() => navigator.clipboard.writeText(selectedWebinar.inviteLink || "")} className="px-3 py-2 bg-white border border-blue-200 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-50 transition">Copy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setShowJoinModal(false)}
+                                className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:shadow-lg transition"
+                            >
+                                Close
+                            </button>
+                        </motion.div>
                     </div>
                 )}
             </div>

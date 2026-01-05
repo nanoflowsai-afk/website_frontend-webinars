@@ -410,7 +410,7 @@ const WebinarDashboard = () => {
                                         onClick={() => handleRegisterClick(featuredWebinar)}
                                         className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-lg hover:shadow-lg transition flex-1 text-sm"
                                     >
-                                        {featuredWebinar.calculatedStatus === "Recorded" ? "Watch Now" : "Details"}
+                                        {featuredWebinar.calculatedStatus === "Recorded" ? "Watch Now" : "Register"}
                                     </motion.button>
                                     <Link to={`/webinars/${featuredWebinar.id}`} className="flex-1">
                                         <motion.button
